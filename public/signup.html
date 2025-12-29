@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - Sorted</title>
+    <link rel="stylesheet" href="css/signup.css">
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/icon-192.png">
+</head>
+
+<body>
+    <div class="dev-banner">Rough around the edges, a bit slow, but usable — we’re actively fixing what sucks.</div>
+    <div class="container">
+        <div class="form-card">
+            <h1>Join Sorted</h1>
+            <!-- <h3>Stop sharing photos on an app made for texting</h3> -->
+            <form id="signupForm">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" required minlength="3">
+                </div>
+
+                <div class="form-group">
+                    <label for="phoneNumber">Phone Number</label>
+                    <input type="tel" id="phoneNumber" required>
+                </div>
+                <div class="form-group">
+                    <label for="securityQuestion">Security Question</label>
+                    <select id="securityQuestion" required>
+                        <option value="">Choose a question...</option>
+                        <option value="What was your first pet's name?">What was your first pet's name?</option>
+                        <option value="What city were you born in?">What city were you born in?</option>
+                        <option value="What is your mother's maiden name?">What is your mother's maiden name?</option>
+                        <option value="What was your childhood nickname?">What was your childhood nickname?</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="securityAnswer">Answer</label>
+                    <input type="text" id="securityAnswer" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" required minlength="8">
+                </div>
+
+                <div class="form-group">
+                    <label for="profilePhoto">Profile Photo</label>
+                    <input type="file" id="profilePhoto" accept="image/*" required>
+                    <small>Upload a clear photo of your face</small>
+                </div>
+
+                <div id="preview-container"></div>
+
+                <button type="submit" class="btn-primary">Sign Up</button>
+
+                <p class="switch-form">
+                    Already have an account? <a href="index.html">Login</a>
+                </p>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/signup.js"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js');
+        }
+    </script>
+</body>
+
+</html>
