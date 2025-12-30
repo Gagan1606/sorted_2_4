@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home - Sorted</title>
+    <link rel="stylesheet" href="css/home.css">
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/icon-192.png">
+</head>
+
+<body>
+    <div class="dev-banner">Rough around the edges, a bit slow, but usable — we’re actively fixing what sucks.</div>
+    <script>
+        if (!('showDirectoryPicker' in window)) {
+            const banner = document.createElement('div');
+            banner.style.cssText = 'background:#ef4444;color:white;padding:12px;text-align:center;font-weight:500;';
+            banner.innerHTML = '⚠️ For automatic photo selection, please use Chrome or Edge browser';
+            document.body.insertBefore(banner, document.body.firstChild);
+        }
+    </script>
+    <nav class="navbar">
+        <h1>Sorted</h1>
+        <div class="nav-actions">
+            <span id="username-display"></span>
+            <button id="logoutBtn" class="btn-secondary">Logout</button>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="actions-panel">
+            <button id="createGroupBtn" class="btn-primary">Create New Group</button>
+            <button id="instantShareBtn" class="btn-primary">Instant Share</button>
+            <button id="viewGroupsBtn" class="btn-secondary">View Groups</button>
+            <button id="viewSharedBtn" class="btn-secondary">Shared Photos</button>
+            <button id="viewRequestsBtn" class="btn-secondary">Group Requests</button>
+        </div>
+
+        <!-- Create Group Modal -->
+        <div id="createGroupModal" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <h2>Create New Group</h2>
+                <p style="color: #a1a1aa; font-size: 14px; margin-bottom: 24px; line-height: 1.5;">
+                    Just enter the start and end dates; photos are auto-selected, people are detected and the group is
+                    created automatically.
+                </p>
+                <form id="createGroupForm">
+                    <div class="form-group">
+                        <label for="groupName">Group Name</label>
+                        <input type="text" id="groupName" required>
+                    </div>
+
+                    <!-- Automatic Selection -->
+                    <div class="form-group">
+                        <label>📁 Automatic Selection (Recommended)</label>
+                        <button type="button" id="selectFolderBtn" class="btn-secondary">Choose Folder</button>
+                        <div id="folderStatus" style="margin-top: 8px; font-size: 14px; color: #888;">No folder selected
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="startTime">Start Date & Time</label>
+                        <input type="datetime-local" id="startTime">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="endTime">End Date & Time</label>
+                        <input type="datetime-local" id="endTime">
+                    </div>
+
+                    <!-- Manual Selection -->
+                    <div class="form-group" style="border-top: 1px solid #e4e4e7; padding-top: 20px; margin-top: 20px;">
+                        <label for="groupPhotos">📷 Or Manual Selection</label>
+                        <input type="file" id="groupPhotos" accept="image/*" multiple>
+                        <small>Select photos manually if automatic doesn't work</small>
+                    </div>
+
+                    <div id="upload-progress"></div>
+
+                    <button type="submit" class="btn-primary">Create Group</button>
+                </form>
+                <!-- FIX 2: Show detected users for confirmation -->
+                <div id="detectedUsersSection" style="display:none;">
+                    <h3>Detected People</h3>
+                    <div id="detectedUsersList"></div>
+                    <div class="form-group">
+                        <label>Add More People (Optional)</label>
+                        <input type="text" id="additionalUsername" placeholder="Enter username">
+                        <button type="button" id="addUserBtn" class="btn-secondary">Add</button>
+                    </div>
+                    <button id="confirmGroupBtn" class="btn-primary">Confirm & Create Group</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Instant Share Modal -->
+        <div id="instantShareModal" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <h2>Instant Share</h2>
+                <p style="color: #a1a1aa; font-size: 14px; margin-bottom: 24px; line-height: 1.5;">
+                    Upload a photo and we'll instantly send it to everyone detected in it
+                </p>
+                <form id="instantShareForm">
+                    <div class="form-group">
+                        <label for="sharePhoto">Select Photo</label>
+                        <input type="file" id="sharePhoto" accept="image/*" required>
+                    </div>
+
+                    <button type="submit" class="btn-primary">Share</button>
+                </form>
+
+                <div id="shareResult"></div>
+            </div>
+        </div>
+
+        <!-- Groups List -->
+        <!-- Groups List -->
+        <div id="groupsList" class="groups-container"></div>
+
+        <!-- Shared Photos Section -->
+        <div id="sharedPhotosSection" class="shared-section" style="display:none;">
+            <div class="section-header">
+                <h2>Shared Photos</h2>
+                <button id="closeSharedBtn" class="btn-secondary">Close</button>
+            </div>
+
+            <div class="tabs">
+                <button id="sharedWithMeTab" class="tab-btn active">Shared With Me</button>
+                <button id="sharedByMeTab" class="tab-btn">Shared By Me</button>
+            </div>
+
+            <div id="sharedWithMeContent" class="tab-content">
+                <div id="sharedWithMePhotos" class="photo-grid"></div>
+            </div>
+
+            <div id="sharedByMeContent" class="tab-content" style="display:none;">
+                <div id="sharedByMePhotos" class="photo-grid"></div>
+            </div>
+        </div>
+        <!-- Group Requests Section -->
+        <div id="groupRequestsSection" class="requests-section" style="display:none;">
+            <div class="section-header">
+                <h2>Group Requests</h2>
+                <button id="closeRequestsBtn" class="btn-secondary">Close</button>
+            </div>
+            <div id="groupRequestsList" class="requests-container"></div>
+        </div>
+    </div>
+
+
+    <script src="js/home.js"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js');
+        }
+    </script>
+</body>
+
+</html>
