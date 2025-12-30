@@ -271,7 +271,7 @@ document.getElementById('confirmAddMember').addEventListener('click', async () =
     }
 
     try {
-        // ✅ NEW: Send request instead of directly adding
+        // NEW: Send request instead of directly adding
         const response = await fetch(`${API_BASE}/send-member-request`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -282,7 +282,7 @@ document.getElementById('confirmAddMember').addEventListener('click', async () =
         const data = await response.json();
 
         if (data.success) {
-            alert(`✅ Membership request sent to ${username}`);
+            alert(`Membership request sent to ${username}`);
             addMemberModal.style.display = 'none';
             document.getElementById('memberUsername').value = '';
         } else {

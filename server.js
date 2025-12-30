@@ -1,6 +1,3 @@
-// ============================================
-// FILE: server.js
-// ============================================
 console.log('SERVER BOOTED');
 const express = require('express');
 const session = require('express-session');
@@ -35,7 +32,15 @@ if (process.env.NODE_ENV === 'production') {
     }
   });
 }
+app.use((req, res, next) => {
+  const host = req.get('host');
 
+  if (host.includes('sorted24-production.up.railway.app')) {  // Only triggers on Railway
+    return res.redirect(301, 'https://sorted.click' + req.originalUrl);
+  }
+
+  next();  // All other platforms continue normally
+});
 // Face API Configuration
 const FACE_API_URL = process.env.FACE_API_URL || 'https://YOUR-SPACE.hf.space';
 
@@ -493,6 +498,23 @@ app.post('/api/reset-password', async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
+});
+
+app.post('/api/track-failure', async (req, res) => {
+  const { type, username, error, timestamp } = req.body;
+
+  // Log to console (for development)
+  console.error('AUTH FAILURE:', {
+    type,
+    username,
+    error,
+    timestamp
+  });
+
+  // Optional: Save to database or file
+  // await FailureLog.create({ type, username, error, timestamp });
+
+  res.json({ success: true });
 });
 
 app.post('/api/logout', (req, res) => {

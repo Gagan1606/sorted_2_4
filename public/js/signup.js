@@ -54,6 +54,16 @@ document.getElementById('signupForm').addEventListener('submit', async (e) => {
             alert('Account created successfully!');
             window.location.href = 'home.html';
         } else {
+            fetch(`${API_BASE}/track-failure`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    type: 'signup_failure',
+                    username: username,
+                    error: data.error,
+                    timestamp: new Date().toISOString()
+                })
+            }).catch(() => { });
             alert(data.error || 'Signup failed');
             submitBtn.disabled = false;
             submitBtn.textContent = 'Sign Up';

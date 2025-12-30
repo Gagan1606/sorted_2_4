@@ -161,7 +161,7 @@ function showFeedbackFormIfNeeded() {
 
                     localStorage.setItem('feedbackShown', 'true');
                     modal.remove();
-                    alert('Thank you for your feedback! 🙏');
+                    alert('Thank you for your feedback!');
                 } else {
                     alert('Please select a feature');
                 }
@@ -275,7 +275,7 @@ async function getPhotosInTimeRange(startTime, endTime) {
     const endDate = new Date(endTime);
 
     const progressDiv = document.getElementById('upload-progress');
-    progressDiv.innerHTML = '<p>🔍 Scanning folder for photos in time range...</p>';
+    progressDiv.innerHTML = '<p>Scanning folder for photos in time range...</p>';
 
     try {
         // Recursively scan folder (including subfolders)
@@ -338,7 +338,7 @@ document.getElementById('createGroupForm').addEventListener('submit', async (e) 
     const progressDiv = document.getElementById('upload-progress');
     const submitBtn = e.target.querySelector('button[type="submit"]');
     submitBtn.disabled = true;
-    submitBtn.textContent = '⏳ Processing...';
+    submitBtn.textContent = 'Processing...';
 
     try {
         let photosToUpload = [];
@@ -350,7 +350,7 @@ document.getElementById('createGroupForm').addEventListener('submit', async (e) 
 
             if (autoPhotos.length > 0) {
                 photosToUpload = autoPhotos;
-                progressDiv.innerHTML = `<p>✅ Found ${autoPhotos.length} photos automatically</p>`;
+                progressDiv.innerHTML = `<p>Found ${autoPhotos.length} photos automatically</p>`;
             } else {
                 alert('⚠️ No photos found in time range. Using manual selection instead.');
             }
@@ -359,12 +359,12 @@ document.getElementById('createGroupForm').addEventListener('submit', async (e) 
         // Fallback to manual selection
         if (photosToUpload.length === 0 && hasManual) {
             photosToUpload = Array.from(manualPhotos);
-            progressDiv.innerHTML = `<p>📷 Using ${photosToUpload.length} manually selected photos</p>`;
+            progressDiv.innerHTML = `<p>Using ${photosToUpload.length} manually selected photos</p>`;
         }
 
         // Final check
         if (photosToUpload.length === 0) {
-            alert('❌ No photos to upload');
+            alert('No photos to upload');
             submitBtn.disabled = false;
             submitBtn.textContent = 'Create Group';
             progressDiv.innerHTML = '';
@@ -391,11 +391,11 @@ document.getElementById('createGroupForm').addEventListener('submit', async (e) 
             formData.append('photos', photo);
         }
 
-        submitBtn.textContent = '⏳ Uploading...';
+        submitBtn.textContent = 'Uploading...';
         progressDiv.innerHTML = `
             <div class="loading-spinner">
-                <p>📤 Uploading ${photosToUpload.length} photo(s)...</p>
-                <p>⏱️ This may take 30-90 seconds</p>
+                <p>Uploading ${photosToUpload.length} photo(s)...</p>
+                <p>This may take 30-90 seconds, please don't refresh and wait.</p>
                 <p style="font-size: 12px; color: #888;">Detecting faces and removing duplicates...</p>
             </div>
         `;
@@ -576,8 +576,8 @@ document.getElementById('confirmGroupBtn').addEventListener('click', async () =>
 
         if (result.success) {
             const message = result.requestsSent.length > 0
-                ? `✅ Group created! Membership requests sent to:\n${result.requestsSent.join(', ')}\n\nThey'll be added once they accept.`
-                : '✅ Group created successfully!';
+                ? `Group created! Membership requests sent to:\n${result.requestsSent.join(', ')}\n\nThey'll be added once they accept.`
+                : 'Group created successfully!';
             
             alert(message);
             
@@ -618,7 +618,7 @@ document.getElementById('instantShareForm').addEventListener('submit', async (e)
     const submitBtn = e.target.querySelector('button[type="submit"]');
     const originalText = submitBtn.textContent;
     submitBtn.disabled = true;
-    submitBtn.textContent = '⏳ Processing...';
+    submitBtn.textContent = 'Processing...';
 
     const resultDiv = document.getElementById('shareResult');
     resultDiv.innerHTML = '<p class="loading">🔄 Detecting faces and sharing photo...</p>';
@@ -639,7 +639,7 @@ document.getElementById('instantShareForm').addEventListener('submit', async (e)
             if (data.sentTo.length > 0) {
                 resultDiv.innerHTML = `
                     <div class="success-message">
-                        <p>✅ Photo shared successfully!</p>
+                        <p>Photo shared successfully!</p>
                         <p>Sent to: <strong>${data.sentTo.join(', ')}</strong></p>
                         <button onclick="location.reload()" class="btn-secondary" style="margin-top: 15px;">Done</button>
                     </div>
@@ -647,7 +647,7 @@ document.getElementById('instantShareForm').addEventListener('submit', async (e)
             } else {
                 resultDiv.innerHTML = `
                     <div class="warning-message">
-                        <p>⚠️ No known faces detected in photo</p>
+                        <p>No known faces detected in photo</p>
                         <button onclick="location.reload()" class="btn-secondary" style="margin-top: 15px;">Try Another</button>
                     </div>
                 `;
@@ -660,7 +660,7 @@ document.getElementById('instantShareForm').addEventListener('submit', async (e)
         console.error('Instant share error:', error);
         submitBtn.disabled = false;
         submitBtn.textContent = originalText;
-        resultDiv.innerHTML = '<p class="error-message">❌ Failed to share photo. Please try again.</p>';
+        resultDiv.innerHTML = '<p class="error-message">Failed to share photo. Please try again.</p>';
     }
 });
 
@@ -701,7 +701,7 @@ document.getElementById('selectFolderBtn').addEventListener('click', async () =>
     try {
         // Check if File System Access API is supported
         if (!('showDirectoryPicker' in window)) {
-            alert('❌ Your browser doesn\'t support automatic folder selection. Please use Chrome or Edge.\n\nAlternative: You can manually select photos instead.');
+            alert('Your browser doesn\'t support automatic folder selection. Please use Chrome or Edge.\n\nAlternative: You can manually select photos instead.');
             return;
         }
 
@@ -790,12 +790,12 @@ async function loadSharedWithMe() {
                 info.innerHTML = `
                     <p><strong>From:</strong> ${photo.sharedBy}</p>
                     <p><strong>Date:</strong> ${new Date(photo.sharedAt).toLocaleDateString()}</p>
-                    <p><strong>People:</strong> ${photo.detectedFaces.map(f => f.username).join(', ')}</p>
+                    
                     ${!photo.viewed ? '<span class="badge-new">NEW</span>' : ''}
                 `;
 
                 photoDiv.appendChild(img);
-                photoDiv.appendChild(info);
+                //photoDiv.appendChild(info);
                 container.appendChild(photoDiv);
             });
         }
@@ -903,7 +903,7 @@ window.acceptGroupRequest = async function(requestId) {
         const data = await response.json();
 
         if (data.success) {
-            alert('✅ Joined group successfully!');
+            alert('Joined group successfully!');
             loadGroupRequests();
             loadGroups(); // Refresh groups list
         } else {
