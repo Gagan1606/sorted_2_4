@@ -324,6 +324,15 @@ app.post('/api/signup', upload.single('profilePhoto'), async (req, res) => {
     const formData = new FormData();
     formData.append('file', new Blob([req.file.buffer]), req.file.originalname);
 
+    // const faceResult = await callFaceAPI('/extract-profile', 'POST', formData);
+
+    // if (!faceResult.success || !faceResult.embedding) {
+    //   return res.status(400).json({
+    //     success: false,
+    //     error: 'No face detected in profile photo'
+    //   });
+    // }
+
     const faceResult = await callFaceAPI('/extract-profile', 'POST', formData);
 
     if (!faceResult.success || !faceResult.embedding) {
@@ -332,6 +341,28 @@ app.post('/api/signup', upload.single('profilePhoto'), async (req, res) => {
         error: 'No face detected in profile photo'
       });
     }
+
+    const faceArea = faceResult.facial_area;
+    const faceSize = faceArea.w * faceArea.h;
+    const confidence = faceResult.confidence;
+
+    // Check 1: Confidence (face clarity)
+    if (confidence < 0.90) {
+      return res.status(400).json({
+        success: false,
+        error: 'Face not clear enough. Please ensure good lighting and face the camera directly.'
+      });
+    }
+
+    // Check 2: Face size
+    if (faceSize < 8000) {
+      return res.status(400).json({
+        success: false,
+        error: 'Face too small in photo. Please take a closer selfie.'
+      });
+    }
+
+    // All validations passed, continue with signup
 
     // Hash password - CRITICAL SECURITY FIX
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -544,241 +575,241 @@ async function batchMatchFacesToUsers(faceEmbeddings, threshold = 0.35) {
 
 // NEW ROUTE: Send group requests instead of direct addition
 app.post('/api/confirm-group-members', requireAuth, async (req, res) => {
-    try {
-        const { groupId, usernamesToAdd } = req.body;
-        const userId = req.session.userId;
+  try {
+    const { groupId, usernamesToAdd } = req.body;
+    const userId = req.session.userId;
 
-        // Verify group exists and user is creator
-        const group = await Group.findById(groupId);
-        if (!group || group.createdBy.toString() !== userId.toString()) {
-            return res.status(403).json({
-                success: false,
-                error: 'Unauthorized'
-            });
-        }
+    // Verify group exists and user is creator
+    const group = await Group.findById(groupId);
+    if (!group || group.createdBy.toString() !== userId.toString()) {
+      return res.status(403).json({
+        success: false,
+        error: 'Unauthorized'
+      });
+    }
 
-        // Get original detected members
-        const originalMembers = group.members.map(m => m.toString());
-        
-        // Find users to remove (were auto-detected but creator removed them)
-        const usersToKeep = await User.find({ 
-            username: { $in: usernamesToAdd } 
-        }).select('_id username');
-        
-        const userIdsToKeep = usersToKeep.map(u => u._id.toString());
-        
-        const usersToRemove = originalMembers.filter(memberId => 
-            memberId !== userId.toString() && !userIdsToKeep.includes(memberId)
-        );
+    // Get original detected members
+    const originalMembers = group.members.map(m => m.toString());
 
-        // Remove unwanted members
-        if (usersToRemove.length > 0) {
-            await Group.updateOne(
-                { _id: groupId },
-                { $pull: { members: { $in: usersToRemove } } }
-            );
-            
-            await User.updateMany(
-                { _id: { $in: usersToRemove } },
-                { $pull: { groups: groupId } }
-            );
-        }
+    // Find users to remove (were auto-detected but creator removed them)
+    const usersToKeep = await User.find({
+      username: { $in: usernamesToAdd }
+    }).select('_id username');
 
-        // Create requests for users not already in group
-        const requestsSent = [];
-        for (const user of usersToKeep) {
-            if (!originalMembers.includes(user._id.toString())) {
-                // Check if request already exists
-                const existingRequest = await GroupRequest.findOne({
-                    group: groupId,
-                    requestedUser: user._id,
-                    status: 'pending'
-                });
+    const userIdsToKeep = usersToKeep.map(u => u._id.toString());
 
-                if (!existingRequest) {
-                    await GroupRequest.create({
-                        group: groupId,
-                        requestedUser: user._id,
-                        requestedBy: userId
-                    });
-                    requestsSent.push(user.username);
-                }
-            }
-        }
+    const usersToRemove = originalMembers.filter(memberId =>
+      memberId !== userId.toString() && !userIdsToKeep.includes(memberId)
+    );
 
-        res.json({
-            success: true,
-            message: requestsSent.length > 0 
-                ? `Membership requests sent to: ${requestsSent.join(', ')}` 
-                : 'Group finalized',
-            requestsSent: requestsSent
+    // Remove unwanted members
+    if (usersToRemove.length > 0) {
+      await Group.updateOne(
+        { _id: groupId },
+        { $pull: { members: { $in: usersToRemove } } }
+      );
+
+      await User.updateMany(
+        { _id: { $in: usersToRemove } },
+        { $pull: { groups: groupId } }
+      );
+    }
+
+    // Create requests for users not already in group
+    const requestsSent = [];
+    for (const user of usersToKeep) {
+      if (!originalMembers.includes(user._id.toString())) {
+        // Check if request already exists
+        const existingRequest = await GroupRequest.findOne({
+          group: groupId,
+          requestedUser: user._id,
+          status: 'pending'
         });
 
-    } catch (error) {
-        console.error('Confirm group error:', error);
-        res.status(500).json({ success: false, error: error.message });
+        if (!existingRequest) {
+          await GroupRequest.create({
+            group: groupId,
+            requestedUser: user._id,
+            requestedBy: userId
+          });
+          requestsSent.push(user.username);
+        }
+      }
     }
+
+    res.json({
+      success: true,
+      message: requestsSent.length > 0
+        ? `Membership requests sent to: ${requestsSent.join(', ')}`
+        : 'Group finalized',
+      requestsSent: requestsSent
+    });
+
+  } catch (error) {
+    console.error('Confirm group error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
 });
 
 // Send individual member request (for manual "Add Member" button)
 app.post('/api/send-member-request', requireAuth, async (req, res) => {
-    try {
-        const { groupId, username } = req.body;
-        const userId = req.session.userId;
+  try {
+    const { groupId, username } = req.body;
+    const userId = req.session.userId;
 
-        // Verify group exists and user is creator
-        const group = await Group.findById(groupId);
-        if (!group) {
-            return res.status(404).json({
-                success: false,
-                error: 'Group not found'
-            });
-        }
-
-        if (group.createdBy.toString() !== userId.toString()) {
-            return res.status(403).json({
-                success: false,
-                error: 'Only group creator can add members'
-            });
-        }
-
-        // Find user to add
-        const userToAdd = await User.findOne({ username });
-        if (!userToAdd) {
-            return res.status(404).json({
-                success: false,
-                error: 'User not found'
-            });
-        }
-
-        // Check if already a member
-        if (group.members.includes(userToAdd._id)) {
-            return res.status(400).json({
-                success: false,
-                error: 'User is already a member'
-            });
-        }
-
-        // Check if request already exists
-        const existingRequest = await GroupRequest.findOne({
-            group: groupId,
-            requestedUser: userToAdd._id,
-            status: 'pending'
-        });
-
-        if (existingRequest) {
-            return res.status(400).json({
-                success: false,
-                error: 'Request already sent to this user'
-            });
-        }
-
-        // Create request
-        await GroupRequest.create({
-            group: groupId,
-            requestedUser: userToAdd._id,
-            requestedBy: userId
-        });
-
-        res.json({
-            success: true,
-            message: `Membership request sent to ${username}`
-        });
-
-    } catch (error) {
-        console.error('Send member request error:', error);
-        res.status(500).json({ success: false, error: error.message });
+    // Verify group exists and user is creator
+    const group = await Group.findById(groupId);
+    if (!group) {
+      return res.status(404).json({
+        success: false,
+        error: 'Group not found'
+      });
     }
+
+    if (group.createdBy.toString() !== userId.toString()) {
+      return res.status(403).json({
+        success: false,
+        error: 'Only group creator can add members'
+      });
+    }
+
+    // Find user to add
+    const userToAdd = await User.findOne({ username });
+    if (!userToAdd) {
+      return res.status(404).json({
+        success: false,
+        error: 'User not found'
+      });
+    }
+
+    // Check if already a member
+    if (group.members.includes(userToAdd._id)) {
+      return res.status(400).json({
+        success: false,
+        error: 'User is already a member'
+      });
+    }
+
+    // Check if request already exists
+    const existingRequest = await GroupRequest.findOne({
+      group: groupId,
+      requestedUser: userToAdd._id,
+      status: 'pending'
+    });
+
+    if (existingRequest) {
+      return res.status(400).json({
+        success: false,
+        error: 'Request already sent to this user'
+      });
+    }
+
+    // Create request
+    await GroupRequest.create({
+      group: groupId,
+      requestedUser: userToAdd._id,
+      requestedBy: userId
+    });
+
+    res.json({
+      success: true,
+      message: `Membership request sent to ${username}`
+    });
+
+  } catch (error) {
+    console.error('Send member request error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
 });
 
 // Get pending requests for current user
 app.get('/api/my-group-requests', requireAuth, async (req, res) => {
-    try {
-        const userId = req.session.userId;
+  try {
+    const userId = req.session.userId;
 
-        const requests = await GroupRequest.find({
-            requestedUser: userId,
-            status: 'pending'
-        })
-        .populate('group', 'groupName')
-        .populate('requestedBy', 'username')
-        .sort({ createdAt: -1 });
+    const requests = await GroupRequest.find({
+      requestedUser: userId,
+      status: 'pending'
+    })
+      .populate('group', 'groupName')
+      .populate('requestedBy', 'username')
+      .sort({ createdAt: -1 });
 
-        res.json({ success: true, requests });
+    res.json({ success: true, requests });
 
-    } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
-    }
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
 });
 
 // Accept group request
 app.post('/api/accept-group-request/:requestId', requireAuth, async (req, res) => {
-    try {
-        const { requestId } = req.params;
-        const userId = req.session.userId;
+  try {
+    const { requestId } = req.params;
+    const userId = req.session.userId;
 
-        const request = await GroupRequest.findOne({
-            _id: requestId,
-            requestedUser: userId,
-            status: 'pending'
-        });
+    const request = await GroupRequest.findOne({
+      _id: requestId,
+      requestedUser: userId,
+      status: 'pending'
+    });
 
-        if (!request) {
-            return res.status(404).json({
-                success: false,
-                error: 'Request not found'
-            });
-        }
-
-        // Add user to group
-        await Group.updateOne(
-            { _id: request.group },
-            { $addToSet: { members: userId } }
-        );
-
-        await User.updateOne(
-            { _id: userId },
-            { $addToSet: { groups: request.group } }
-        );
-
-        // Update request status
-        request.status = 'accepted';
-        await request.save();
-
-        res.json({ success: true, message: 'Joined group successfully' });
-
-    } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
+    if (!request) {
+      return res.status(404).json({
+        success: false,
+        error: 'Request not found'
+      });
     }
+
+    // Add user to group
+    await Group.updateOne(
+      { _id: request.group },
+      { $addToSet: { members: userId } }
+    );
+
+    await User.updateOne(
+      { _id: userId },
+      { $addToSet: { groups: request.group } }
+    );
+
+    // Update request status
+    request.status = 'accepted';
+    await request.save();
+
+    res.json({ success: true, message: 'Joined group successfully' });
+
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
 });
 
 // Reject group request
 app.post('/api/reject-group-request/:requestId', requireAuth, async (req, res) => {
-    try {
-        const { requestId } = req.params;
-        const userId = req.session.userId;
+  try {
+    const { requestId } = req.params;
+    const userId = req.session.userId;
 
-        const request = await GroupRequest.findOne({
-            _id: requestId,
-            requestedUser: userId,
-            status: 'pending'
-        });
+    const request = await GroupRequest.findOne({
+      _id: requestId,
+      requestedUser: userId,
+      status: 'pending'
+    });
 
-        if (!request) {
-            return res.status(404).json({
-                success: false,
-                error: 'Request not found'
-            });
-        }
-
-        request.status = 'rejected';
-        await request.save();
-
-        res.json({ success: true, message: 'Request declined' });
-
-    } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
+    if (!request) {
+      return res.status(404).json({
+        success: false,
+        error: 'Request not found'
+      });
     }
+
+    request.status = 'rejected';
+    await request.save();
+
+    res.json({ success: true, message: 'Request declined' });
+
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
 });
 
 // app.post('/api/create-group', requireAuth, upload.array('photos', 50), async (req, res) => {
