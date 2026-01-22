@@ -78,7 +78,7 @@ async function checkAuth() {
         });
 
         if (!response.ok) {
-            window.location.href = 'index.html';
+            window.location.href = 'login.html';
             return;
         }
 
@@ -87,7 +87,7 @@ async function checkAuth() {
         document.getElementById('username-display').textContent = currentUser.username;
         showFeedbackFormIfNeeded();
     } catch (error) {
-        window.location.href = 'index.html';
+        window.location.href = 'login.html';
     }
 }
 
@@ -181,7 +181,7 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
         method: 'POST',
         credentials: 'include'
     });
-    window.location.href = 'index.html';
+    window.location.href = 'login.html';
 });
 
 // Modal controls

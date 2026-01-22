@@ -1,56 +1,305 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#667eea">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Login - Sorted</title>
-    <link rel="stylesheet" href="css/login.css">
-    <link rel="manifest" href="/manifest.json">
-    <link rel="apple-touch-icon" href="/icon-192.png">
-</head>
-
-<body>
-    <div class="dev-banner">Rough around the edges, a bit slow, but usable — we’re actively fixing what sucks.</div>
-    <div class="container">
-        <div class="form-card">
-            <h1>Sorted</h1>
-            <form id="loginForm">
-                <div class="form-group">
-                    <label for="username">Username</label>
-                    <input type="text" id="username" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="password">Password</label>
-                    <input type="password" id="password" required>
-                </div>
-
-                <button type="submit" class="btn-primary">Login</button>
-
-                <p class="switch-form">
-                    New user? <a href="signup.html">Sign Up</a>
-                </p>
-                <!-- Add after the .switch-form div in index.html -->
-                <div class="switch-form">
-                    <a href="forgot-password.html">Forgot Password?</a>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <script src="js/login.js"></script>
-    <script>
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/sw.js')
-                .then(() => console.log('Service Worker registered'))
-                .catch(err => console.log('SW registration failed'));
+    <title>Sorted - Share Photos Automatically</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-    </script>
-</body>
-</body>
 
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', system-ui, sans-serif;
+            background: #0a0a0b;
+            color: #e4e4e7;
+            overflow-x: hidden;
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 40px 20px;
+            position: relative;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 50% 50%, rgba(250, 250, 250, 0.03) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        .logo {
+            font-size: 64px;
+            font-weight: 700;
+            color: #fafafa;
+            margin-bottom: 32px;
+            letter-spacing: -2px;
+        }
+
+        .tagline {
+            font-size: 32px;
+            color: #fafafa;
+            font-weight: 600;
+            margin-bottom: 24px;
+            max-width: 800px;
+            line-height: 1.3;
+        }
+
+        .subtitle {
+            font-size: 20px;
+            color: #71717a;
+            margin-bottom: 56px;
+            max-width: 640px;
+            line-height: 1.5;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 18px 40px;
+            border: none;
+            border-radius: 12px;
+            font-size: 17px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: #fafafa;
+            color: #18181b;
+        }
+
+        .btn-primary:hover {
+            background: #e4e4e7;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(250, 250, 250, 0.15);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: #e4e4e7;
+            border: 1px solid #3f3f46;
+        }
+
+        .btn-secondary:hover {
+            background: #27272a;
+            border-color: #52525b;
+        }
+
+        /* Problem Section */
+        .problem {
+            max-width: 900px;
+            margin: 100px auto;
+            padding: 0 20px;
+            text-align: center;
+        }
+
+        .problem-title {
+            font-size: 28px;
+            color: #fafafa;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        .problem-text {
+            font-size: 18px;
+            color: #a1a1aa;
+            line-height: 1.7;
+            margin-bottom: 16px;
+        }
+
+        /* Solution Section */
+        .solution {
+            background: #18181b;
+            border-top: 1px solid #27272a;
+            border-bottom: 1px solid #27272a;
+            padding: 100px 20px;
+        }
+
+        .solution-content {
+            max-width: 900px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .solution-title {
+            font-size: 28px;
+            color: #fafafa;
+            font-weight: 600;
+            margin-bottom: 32px;
+        }
+
+        .solution-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 24px;
+            text-align: left;
+        }
+
+        .solution-item {
+            background: #0a0a0b;
+            border: 1px solid #27272a;
+            border-radius: 12px;
+            padding: 24px;
+            transition: all 0.3s;
+        }
+
+        .solution-item:hover {
+            border-color: #3f3f46;
+            transform: translateY(-2px);
+        }
+
+        .solution-item h3 {
+            font-size: 18px;
+            color: #fafafa;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        .solution-item p {
+            font-size: 15px;
+            color: #a1a1aa;
+            line-height: 1.6;
+        }
+
+        /* Final CTA */
+        .final-cta {
+            text-align: center;
+            padding: 100px 20px 120px;
+        }
+
+        .final-cta h2 {
+            font-size: 36px;
+            color: #fafafa;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .final-cta p {
+            font-size: 20px;
+            color: #71717a;
+            margin-bottom: 40px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .logo {
+                font-size: 48px;
+            }
+
+            .tagline {
+                font-size: 24px;
+            }
+
+            .subtitle {
+                font-size: 17px;
+            }
+
+            .problem-title,
+            .solution-title {
+                font-size: 24px;
+            }
+
+            .problem-text {
+                font-size: 16px;
+            }
+
+            .solution-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .cta-buttons {
+                flex-direction: column;
+                width: 100%;
+                max-width: 300px;
+            }
+
+            .btn {
+                width: 100%;
+            }
+
+            .final-cta h2 {
+                font-size: 28px;
+            }
+
+            .final-cta p {
+                font-size: 17px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Hero Section -->
+    <section class="hero">
+        <h1 class="logo">Sorted</h1>
+        <p class="tagline">You took 500 photos at the party. Now what?</p>
+        <p class="subtitle">Stop wasting hours selecting, sorting, and sending photos manually. Upload once. AI handles the rest.</p>
+        <div class="cta-buttons">
+            <a href="login.html" class="btn btn-primary">Get Started</a>
+            <a href="signup.html" class="btn btn-secondary">Create Account</a>
+        </div>
+    </section>
+
+    <!-- Problem Section -->
+    <section class="problem">
+        <h2 class="problem-title">The photo sharing nightmare</h2>
+        <p class="problem-text">You spend 3 hours going through photos. Selecting the good ones. Removing duplicates. Creating separate albums for each person. Sending them individually.</p>
+        <p class="problem-text">Then someone asks for photos you forgot to send. You do it all over again.</p>
+        <p class="problem-text" style="color: #fafafa; font-weight: 600; margin-top: 32px;">There's a better way.</p>
+    </section>
+
+    <!-- Solution Section -->
+    <section class="solution">
+        <div class="solution-content">
+            <h2 class="solution-title">How Sorted works</h2>
+            <div class="solution-grid">
+                <div class="solution-item">
+                    <h3>Upload everything</h3>
+                    <p>Dump all your event photos. Don't sort, don't select. Just upload.</p>
+                </div>
+
+                <div class="solution-item">
+                    <h3>AI does the work</h3>
+                    <p>Face detection identifies everyone. Duplicates removed. Similar poses filtered. Groups created automatically.</p>
+                </div>
+
+                <div class="solution-item">
+                    <h3>Everyone gets their album</h3>
+                    <p>Each person receives only their photos. Organized by date. Zero effort from you.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Final CTA -->
+    <section class="final-cta">
+        <h2>Never manually sort photos again</h2>
+        <p>Five minutes to upload. Zero minutes to organize.</p>
+        <div class="cta-buttons">
+            <a href="signup.html" class="btn btn-primary">Start Now</a>
+            <a href="index.html" class="btn btn-secondary">Sign In</a>
+        </div>
+    </section>
+</body>
 </html>
